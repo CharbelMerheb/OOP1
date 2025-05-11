@@ -1,14 +1,12 @@
-# Use an OpenJDK image
-FROM openjdk:17-jdk-slim
-
-# Set working directory inside the container
+# Stage 1: Build the JAR using Maven
+FROM maven:3.8.5-openjdk-17-slim AS build
 WORKDIR /app
+COPY . .
+RUN mvn clean package -DskipTests
 
-# Copy built jar from local machine to container
-COPY target/recipe-api-0.0.1-SNAPSHOT.jar app.jar
-
-# Expose port Render uses
+# Stage 2: Run the built JAR
+FROM openjdk:17-jdk-slim
+WORKDIR /app
+COPY --from=build /app/target/*.jar app.jar
 EXPOSE 10000
-
-# Run the jar
 CMD ["java", "-Dserver.port=10000", "-jar", "app.jar"]
